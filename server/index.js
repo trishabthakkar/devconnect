@@ -118,6 +118,11 @@ function buildSnapshot(userId) {
   const publicUsers = {};
   for (const [id, u] of Object.entries(store.users)) publicUsers[id] = publicUser(u);
 
+  const onlineUserIds = [];
+  for (const { userId: uid } of clients.values()) {
+    if (uid && !onlineUserIds.includes(uid)) onlineUserIds.push(uid);
+  }
+
   return {
     type:             'state_snapshot',
     users:            publicUsers,
@@ -128,6 +133,7 @@ function buildSnapshot(userId) {
     incomingRequests: Object.entries(store.friendRequests)
       .filter(([, targets]) => targets.includes(userId))
       .map(([from]) => from),
+    onlineUserIds,
   };
 }
 
@@ -184,7 +190,9 @@ handlers.register = async (ws, clientId, msg) => {
     skills:    Array.isArray(skills) ? skills.map(String).slice(0, 20) : [],
     createdAt: Date.now(),
   };
-  clients.get(clientId).userId = userId;
+  const client = clients.get(clientId);
+  if (!client) return;
+  client.userId = userId;
   await saveData();
 
   send(ws, { type: 'registered', user: publicUser(store.users[userId]) });
@@ -215,7 +223,7 @@ handlers.login = async (ws, clientId, msg) => {
 
 // ── update_profile ────────────────────────────────────────────────────────────
 handlers.update_profile = async (ws, clientId, msg) => {
-  const { userId } = clients.get(clientId);
+  const { userId } = clients.get(clientId) || {};
   if (!userId) return send(ws, { type: 'error', code: 'UNAUTHED', text: 'not authenticated' });
 
   const user = store.users[userId];
@@ -234,7 +242,7 @@ handlers.update_profile = async (ws, clientId, msg) => {
 
 // ── post (collab request / debug call) ───────────────────────────────────────
 handlers.post = async (ws, clientId, msg) => {
-  const { userId } = clients.get(clientId);
+  const { userId } = clients.get(clientId) || {};
   if (!userId) return send(ws, { type: 'error', code: 'UNAUTHED', text: 'not authenticated' });
 
   const { title, body = '', tags = [], kind = 'collab' } = msg;
@@ -263,7 +271,7 @@ handlers.post = async (ws, clientId, msg) => {
 
 // ── delete_post ───────────────────────────────────────────────────────────────
 handlers.delete_post = async (ws, clientId, msg) => {
-  const { userId } = clients.get(clientId);
+  const { userId } = clients.get(clientId) || {};
   if (!userId) return send(ws, { type: 'error', code: 'UNAUTHED', text: 'not authenticated' });
 
   const idx = store.posts.findIndex(p => p.postId === msg.postId);
@@ -290,7 +298,7 @@ handlers.delete_post = async (ws, clientId, msg) => {
 //     instead of creating an orphaned pair of pending requests.
 
 handlers.friend_request = async (ws, clientId, msg) => {
-  const { userId: from } = clients.get(clientId);
+  const { userId: from } = clients.get(clientId) || {};
   if (!from) return send(ws, { type: 'error', code: 'UNAUTHED', text: 'not authenticated' });
 
   const to = msg.toUserId;
@@ -329,7 +337,7 @@ handlers.friend_request = async (ws, clientId, msg) => {
 
 // ── friend_respond ────────────────────────────────────────────────────────────
 handlers.friend_respond = async (ws, clientId, msg) => {
-  const { userId: to } = clients.get(clientId);
+  const { userId: to } = clients.get(clientId) || {};
   if (!to) return send(ws, { type: 'error', code: 'UNAUTHED', text: 'not authenticated' });
 
   const { fromUserId: from, accept } = msg;
@@ -360,7 +368,7 @@ handlers.friend_respond = async (ws, clientId, msg) => {
 
 // ── unfriend ──────────────────────────────────────────────────────────────────
 handlers.unfriend = async (ws, clientId, msg) => {
-  const { userId: self } = clients.get(clientId);
+  const { userId: self } = clients.get(clientId) || {};
   if (!self) return send(ws, { type: 'error', code: 'UNAUTHED', text: 'not authenticated' });
 
   const other = msg.userId;
@@ -380,7 +388,7 @@ handlers.unfriend = async (ws, clientId, msg) => {
 
 // ── send_dm ───────────────────────────────────────────────────────────────────
 handlers.send_dm = async (ws, clientId, msg) => {
-  const { userId: from } = clients.get(clientId);
+  const { userId: from } = clients.get(clientId) || {};
   if (!from) return send(ws, { type: 'error', code: 'UNAUTHED', text: 'not authenticated' });
 
   const { toUserId, text } = msg;

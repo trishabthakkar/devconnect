@@ -1,432 +1,978 @@
 <!DOCTYPE html>
-<html lang="en" class="h-full">
+<html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>DevConnect</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    /* custom scrollbar */
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #4f46e5; border-radius: 3px; }
-    .tab-active { border-bottom: 2px solid #6366f1; color: #6366f1; }
-    .skill-tag  { display: inline-flex; align-items: center; gap: 4px; }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DevConnect — CS Collaboration Network</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+/* ── Reset & Base ─────────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overflow:hidden;}
+body{
+  background:#0B0F19;
+  color:#F1F5F9;
+  font-family:'Inter',system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ── Design tokens ────────────────────────────────────────── */
+:root{
+  --bg:        #0B0F19;
+  --bg-deep:   #07080F;
+  --bg-card:   #111625;
+  --border:    #1e2235;
+  --accent:    #8B5CF6;
+  --accent-10: rgba(139,92,246,.10);
+  --accent-20: rgba(139,92,246,.20);
+  --accent-35: rgba(139,92,246,.35);
+  --hi:        #F1F5F9;
+  --mid:       #C4B5FD;
+  --lo:        #64748b;
+}
+
+/* ── Scrollbars ───────────────────────────────────────────── */
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:rgba(139,92,246,.15);border-radius:2px;}
+::-webkit-scrollbar-thumb:hover{background:rgba(139,92,246,.28);}
+
+/* ── Flat panel (replaces glassmorphism) ──────────────────── */
+.glass{
+  background:#111625;
+  border:1px solid var(--border);
+}
+
+/* ── Inputs ───────────────────────────────────────────────── */
+.inp{
+  width:100%;
+  background:rgba(7,8,15,.8);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:9px 13px;
+  font-size:13px;
+  font-family:inherit;
+  color:var(--hi);
+  outline:none;
+  transition:border-color .2s;
+  resize:none;
+}
+.inp::placeholder{color:var(--lo);}
+.inp:focus{border-color:var(--accent);box-shadow:0 0 0 2px rgba(139,92,246,.08);}
+
+/* ── Buttons ──────────────────────────────────────────────── */
+.btn-ice{
+  background:var(--accent);
+  color:#fff;
+  border:none;border-radius:8px;
+  padding:9px 18px;font-size:13px;font-weight:600;
+  cursor:pointer;transition:filter .18s,transform .1s;
+  letter-spacing:.01em;
+}
+.btn-ice:hover{filter:brightness(1.1);}
+.btn-ice:active{transform:scale(.97);}
+
+.btn-outline{
+  background:transparent;color:var(--accent);
+  border:1px solid var(--accent-35);
+  border-radius:7px;padding:5px 12px;
+  font-size:12px;font-weight:600;cursor:pointer;
+  transition:background .18s;
+}
+.btn-outline:hover{background:var(--accent-10);}
+
+.btn-ghost{
+  background:transparent;color:var(--lo);
+  border:1px solid var(--border);
+  border-radius:7px;padding:5px 10px;
+  font-size:12px;cursor:pointer;transition:all .18s;
+}
+.btn-ghost:hover{background:rgba(139,92,246,.07);color:var(--hi);}
+
+/* ── Skill tags ───────────────────────────────────────────── */
+.tag{
+  display:inline-flex;align-items:center;
+  padding:2px 9px;border-radius:20px;
+  font-size:11px;font-weight:500;
+  font-family:'JetBrains Mono',monospace;
+  background:rgba(46,16,101,.4);color:#C4B5FD;
+  border:1px solid rgba(76,29,149,.4);
+  white-space:nowrap;
+}
+.badge-collab{
+  font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  padding:2px 7px;border-radius:4px;
+  background:rgba(46,16,101,.5);color:#A78BFA;border:1px solid rgba(76,29,149,.5);
+}
+.badge-debug{
+  font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+  padding:2px 7px;border-radius:4px;
+  background:rgba(120,53,15,.3);color:#fb923c;border:1px solid rgba(124,45,18,.35);
+}
+
+/* ── Avatar ───────────────────────────────────────────────── */
+.av{
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-weight:700;color:#fff;border:2px solid var(--border);
+  overflow:hidden;flex-shrink:0;background-size:cover;background-position:center;
+}
+
+/* ── Online dot ───────────────────────────────────────────── */
+.online-dot{
+  width:8px;height:8px;border-radius:50%;
+  background:var(--accent);
+  animation:dot-pulse 2.8s ease-in-out infinite;flex-shrink:0;
+}
+@keyframes dot-pulse{
+  0%,100%{opacity:1;}
+  50%{opacity:.42;}
+}
+
+/* ── Section label ────────────────────────────────────────── */
+.sec-lbl{
+  font-size:10px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--lo);
+}
+
+/* ── Feed card ────────────────────────────────────────────── */
+.feed-card{
+  background:rgba(17,22,37,.85);
+  border:1px solid var(--border);border-radius:12px;padding:14px 16px;
+  transition:border-color .2s;
+}
+.feed-card:hover{border-color:rgba(139,92,246,.3);}
+
+@keyframes post-arrive{
+  from{opacity:0;transform:translateY(-6px);}
+  to{opacity:1;transform:translateY(0);}
+}
+.post-new{animation:post-arrive .4s ease-out forwards;}
+
+/* ── Publish flash ────────────────────────────────────────── */
+@keyframes pub-flash{
+  0%,100%{box-shadow:0 0 0 rgba(139,92,246,0);}
+  40%{box-shadow:0 0 0 2px rgba(139,92,246,.32);}
+}
+.pub-glow{animation:pub-flash .55s ease-out;}
+
+/* ── Peer card ────────────────────────────────────────────── */
+.peer-card{
+  padding:11px 10px;border-radius:10px;
+  border:1px solid transparent;transition:all .15s;cursor:default;
+}
+.peer-card:hover{background:rgba(139,92,246,.05);border-color:var(--border);}
+
+/* ── Kind pill switcher ───────────────────────────────────── */
+.kpill{
+  flex:1;padding:6px;text-align:center;font-size:11px;font-weight:700;
+  letter-spacing:.06em;text-transform:uppercase;cursor:pointer;
+  border-radius:6px;border:none;transition:all .2s;color:var(--lo);background:transparent;
+}
+.kpill-collab{background:rgba(139,92,246,.12);color:var(--accent);}
+.kpill-debug{background:rgba(251,146,60,.12);color:#fb923c;}
+
+/* ── Collapse panel ───────────────────────────────────────── */
+.collapse{overflow:hidden;max-height:0;transition:max-height .3s ease;}
+.collapse.open{max-height:480px;}
+
+/* ── DM drawer ────────────────────────────────────────────── */
+#dm-drawer{
+  position:fixed;bottom:0;right:16px;width:316px;z-index:40;
+  border:1px solid var(--border);border-bottom:none;
+  border-radius:12px 12px 0 0;overflow:hidden;
+  background:#0D1120;
+  box-shadow:0 -4px 32px rgba(0,0,0,.45);
+  transform:translateY(calc(100% + 2px));
+  transition:transform .3s cubic-bezier(.4,0,.2,1);
+}
+#dm-drawer.open{transform:translateY(0);}
+
+/* ── DM bubbles ───────────────────────────────────────────── */
+.bub-mine{
+  background:rgba(139,92,246,.12);
+  border:1px solid rgba(139,92,246,.3);color:var(--hi);
+  border-radius:14px 14px 3px 14px;padding:8px 12px;
+  max-width:78%;word-break:break-word;
+}
+.bub-theirs{
+  background:rgba(30,33,58,.8);
+  border:1px solid var(--border);color:var(--hi);
+  border-radius:14px 14px 14px 3px;padding:8px 12px;
+  max-width:78%;word-break:break-word;
+}
+
+/* ── Toast ────────────────────────────────────────────────── */
+@keyframes t-in{from{opacity:0;transform:translateX(110%);}to{opacity:1;transform:translateX(0);}}
+@keyframes t-out{from{opacity:1;transform:translateX(0);}to{opacity:0;transform:translateX(110%);}}
+.t-in{animation:t-in .28s ease-out forwards;}
+.t-out{animation:t-out .25s ease-in forwards;}
+
+/* ── Logo glyph ───────────────────────────────────────────── */
+.logo{
+  width:32px;height:32px;border-radius:8px;
+  background:var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:900;font-size:13px;color:#fff;
+  flex-shrink:0;
+}
+
+/* ── Responsive: collapse left panel below 800px ─────────── */
+@media (max-width: 800px) {
+  #main-grid { grid-template-columns: 1fr minmax(160px, 210px) !important; }
+  #left-panel { display: none !important; }
+}
+
+/* ── Auth screen bg ───────────────────────────────────────── */
+#auth-wrap{
+  background-color:var(--bg);
+  background-image: radial-gradient(rgba(139,92,246,.07) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+</style>
 </head>
-<body class="h-full bg-gray-950 text-gray-100 font-sans">
+<body>
 
-<!-- ═══════════════════════════════════════ APP SHELL ═══════════════════════ -->
-<div id="app" class="flex flex-col h-full">
+<!-- ══════════════════════════════════════════════════════════
+     AUTH SCREEN
+══════════════════════════════════════════════════════════ -->
+<div id="auth-wrap" style="position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;">
 
-  <!-- Top bar -->
-  <header class="flex items-center justify-between px-6 py-3 bg-gray-900 border-b border-gray-800 shrink-0">
-    <div class="flex items-center gap-3">
-      <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-sm">DC</div>
-      <span class="font-semibold text-lg tracking-tight">DevConnect</span>
-    </div>
-    <div class="flex items-center gap-4 text-sm">
-      <span id="status-dot" class="inline-block w-2 h-2 rounded-full bg-red-500"></span>
-      <span id="status-text" class="text-gray-400">Connecting…</span>
-      <span id="online-badge" class="hidden px-2 py-0.5 rounded-full bg-indigo-900 text-indigo-300 text-xs font-medium"></span>
-      <span id="user-badge" class="hidden px-3 py-1 rounded-full bg-indigo-700 text-white text-xs font-semibold"></span>
-    </div>
-  </header>
+  <!-- radial glow behind card -->
+  <div style="position:absolute;width:640px;height:640px;border-radius:50%;background:radial-gradient(circle,rgba(139,92,246,.07) 0%,transparent 68%);pointer-events:none;"></div>
 
-  <!-- Auth overlay -->
-  <div id="auth-screen" class="flex-1 flex items-center justify-center">
-    <div class="w-full max-w-sm bg-gray-900 rounded-2xl p-8 shadow-xl border border-gray-800">
-      <h2 class="text-2xl font-bold mb-1">Welcome to DevConnect</h2>
-      <p class="text-gray-400 text-sm mb-6">Connect with CS students. Build together.</p>
+  <div class="glass" style="width:100%;max-width:420px;border-radius:16px;padding:32px;position:relative;z-index:1;border-color:rgba(139,92,246,.18);">
 
-      <div class="flex gap-2 mb-5">
-        <button id="tab-register" onclick="switchTab('register')" class="tab-active flex-1 pb-2 text-sm font-medium transition-colors">Register</button>
-        <button id="tab-login"    onclick="switchTab('login')"    class="flex-1 pb-2 text-sm font-medium text-gray-400 transition-colors">Login</button>
+    <!-- Brand -->
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:6px;">
+      <div class="logo">DC</div>
+      <div>
+        <div style="font-size:20px;font-weight:700;color:var(--hi);letter-spacing:-.02em;">DevConnect</div>
+        <div style="font-size:12px;color:var(--lo);">CS Collaboration Network</div>
       </div>
-
-      <form id="auth-form" onsubmit="submitAuth(event)" class="space-y-3">
-        <input id="auth-username" type="text" placeholder="Username" required
-          class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-indigo-500 transition" />
-
-        <div id="register-fields" class="space-y-3">
-          <input id="auth-bio" type="text" placeholder="Short bio (optional)"
-            class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-indigo-500 transition" />
-          <input id="auth-skills" type="text" placeholder="Skills, comma-separated (e.g. React, Python)"
-            class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-indigo-500 transition" />
-        </div>
-
-        <button type="submit"
-          class="w-full bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 rounded-lg py-2.5 font-semibold text-sm transition mt-1">
-          <span id="auth-btn-label">Create Account</span>
-        </button>
-        <p id="auth-error" class="text-red-400 text-xs text-center hidden"></p>
-      </form>
     </div>
-  </div>
 
-  <!-- Main app (hidden until authed) -->
-  <div id="main-screen" class="hidden flex-1 flex overflow-hidden">
+    <!-- Divider -->
+    <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(139,92,246,.2),transparent);margin:20px 0;"></div>
 
-    <!-- Left sidebar: online users -->
-    <aside class="w-56 bg-gray-900 border-r border-gray-800 flex flex-col shrink-0">
-      <div class="px-4 py-3 border-b border-gray-800 text-xs font-semibold text-gray-500 uppercase tracking-wider">Online Now</div>
-      <ul id="user-list" class="flex-1 overflow-y-auto py-2 space-y-0.5 px-2"></ul>
-    </aside>
+    <!-- Tab toggle -->
+    <div style="display:flex;background:rgba(7,8,15,.7);border-radius:8px;padding:3px;border:1px solid var(--border);margin-bottom:20px;">
+      <button id="at-reg" onclick="switchAuthTab('register')"
+        style="flex:1;padding:8px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;border:none;background:var(--accent);color:var(--bg-deep);">
+        Register
+      </button>
+      <button id="at-log" onclick="switchAuthTab('login')"
+        style="flex:1;padding:8px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;transition:all .2s;border:none;background:transparent;color:var(--lo);">
+        Sign In
+      </button>
+    </div>
 
-    <!-- Center panel: tabs -->
-    <main class="flex-1 flex flex-col overflow-hidden">
-      <!-- Tabs -->
-      <nav class="flex gap-0 border-b border-gray-800 bg-gray-900 px-4 shrink-0">
-        <button onclick="openTab('feed')"     id="nav-feed"     class="tab-active px-4 py-3 text-sm font-medium transition-colors mr-1">Project Feed</button>
-        <button onclick="openTab('profile')"  id="nav-profile"  class="px-4 py-3 text-sm font-medium text-gray-400 transition-colors mr-1">My Profile</button>
-        <button onclick="openTab('messages')" id="nav-messages" class="px-4 py-3 text-sm font-medium text-gray-400 transition-colors">Messages</button>
-      </nav>
-
-      <!-- Feed tab -->
-      <section id="tab-feed" class="flex-1 overflow-y-auto p-5 space-y-4">
-        <!-- Post project card -->
-        <div class="bg-gray-900 rounded-xl border border-gray-800 p-4">
-          <h3 class="font-semibold mb-3 text-sm text-gray-300">Post a Project</h3>
-          <form onsubmit="postProject(event)" class="space-y-2">
-            <input id="proj-title" type="text" placeholder="Project title" required
-              class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500 transition" />
-            <textarea id="proj-desc" placeholder="Short description…" rows="2"
-              class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500 transition resize-none"></textarea>
-            <input id="proj-tags" type="text" placeholder="Tags (e.g. React, AI, Open Source)"
-              class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500 transition" />
-            <button type="submit"
-              class="bg-indigo-600 hover:bg-indigo-500 px-4 py-1.5 rounded-lg text-sm font-medium transition">Publish</button>
-          </form>
-        </div>
-        <!-- Live project cards -->
-        <div id="project-list" class="space-y-3"></div>
-      </section>
-
-      <!-- Profile tab -->
-      <section id="tab-profile" class="hidden flex-1 overflow-y-auto p-5">
-        <div class="max-w-lg space-y-4">
-          <h3 class="font-semibold text-lg">My Profile</h3>
-          <div id="profile-view" class="bg-gray-900 rounded-xl border border-gray-800 p-5 space-y-3">
-            <div class="text-2xl font-bold" id="pv-username"></div>
-            <p class="text-gray-400 text-sm" id="pv-bio"></p>
-            <div id="pv-skills" class="flex flex-wrap gap-2"></div>
-          </div>
-          <div class="bg-gray-900 rounded-xl border border-gray-800 p-5 space-y-3">
-            <h4 class="text-sm font-semibold text-gray-400">Update Profile</h4>
-            <form onsubmit="updateProfile(event)" class="space-y-2">
-              <input id="upd-bio" type="text" placeholder="Bio"
-                class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500 transition" />
-              <input id="upd-skills" type="text" placeholder="Skills (comma-separated)"
-                class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500 transition" />
-              <button type="submit"
-                class="bg-indigo-600 hover:bg-indigo-500 px-4 py-1.5 rounded-lg text-sm font-medium transition">Save</button>
-            </form>
-          </div>
-        </div>
-      </section>
-
-      <!-- Messages tab -->
-      <section id="tab-messages" class="hidden flex-1 flex overflow-hidden">
-        <div class="w-48 border-r border-gray-800 flex flex-col bg-gray-900 shrink-0">
-          <div class="px-4 py-3 border-b border-gray-800 text-xs font-semibold text-gray-500 uppercase tracking-wider">Users</div>
-          <ul id="dm-user-list" class="flex-1 overflow-y-auto py-2 space-y-0.5 px-2"></ul>
-        </div>
-        <div class="flex-1 flex flex-col overflow-hidden">
-          <div id="dm-header" class="px-4 py-3 border-b border-gray-800 text-sm font-medium text-gray-400 shrink-0">Select a user to message</div>
-          <div id="dm-messages" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
-          <form id="dm-form" onsubmit="sendDm(event)" class="px-4 py-3 border-t border-gray-800 flex gap-2 shrink-0">
-            <input id="dm-input" type="text" placeholder="Type a message…"
-              class="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500 transition" />
-            <button type="submit"
-              class="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-lg text-sm font-medium transition">Send</button>
-          </form>
-        </div>
-      </section>
-    </main>
+    <!-- Form -->
+    <form id="auth-form" onsubmit="submitAuth(event)" style="display:flex;flex-direction:column;gap:11px;">
+      <input id="f-user"   class="inp" type="text" placeholder="Username" required autocomplete="off" />
+      <div id="reg-fields" style="display:flex;flex-direction:column;gap:11px;">
+        <input id="f-bio"    class="inp" type="text" placeholder="Short bio (optional)" />
+        <input id="f-avatar" class="inp" type="url"  placeholder="Profile picture URL (optional)" />
+        <input id="f-skills" class="inp" type="text" placeholder="Skills: React, Python, Rust, Solana…" />
+      </div>
+      <button id="auth-btn" type="submit" class="btn-ice" style="margin-top:4px;">Create Account</button>
+      <p id="auth-err" style="display:none;font-size:12px;color:#f87171;text-align:center;"></p>
+    </form>
   </div>
 </div>
 
-<script>
-// ── State ────────────────────────────────────────────────────────────────────
-let ws, me = null, authMode = 'register';
-let allUsers = {}, allProjects = [], allMessages = [];
-let activeDmUserId = null;
+<!-- ══════════════════════════════════════════════════════════
+     TOAST AREA
+══════════════════════════════════════════════════════════ -->
+<div id="toasts" style="position:fixed;top:14px;right:14px;z-index:60;display:flex;flex-direction:column;gap:8px;pointer-events:none;max-width:300px;"></div>
 
-// ── WebSocket ────────────────────────────────────────────────────────────────
+<!-- ══════════════════════════════════════════════════════════
+     MAIN APP  (hidden until auth)
+══════════════════════════════════════════════════════════ -->
+<div id="app" style="display:none;height:100vh;flex-direction:column;">
+
+  <!-- ── TOP NAV ─────────────────────────────────────────── -->
+  <header style="height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;flex-shrink:0;background:rgba(7,8,15,.97);border-bottom:1px solid var(--border);">
+    <div style="display:flex;align-items:center;gap:11px;">
+      <div class="logo">DC</div>
+      <span style="font-size:16px;font-weight:700;color:var(--hi);letter-spacing:-.02em;">DevConnect</span>
+      <span style="font-size:11px;color:var(--lo);font-family:'JetBrains Mono',monospace;">// real-time collab</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px;">
+      <div style="display:flex;align-items:center;gap:6px;">
+        <div id="ws-dot" style="width:7px;height:7px;border-radius:50%;background:#ef4444;flex-shrink:0;"></div>
+        <span id="ws-lbl" style="font-size:12px;color:var(--lo);">Connecting…</span>
+      </div>
+      <div id="online-pill" style="display:none;padding:3px 10px;border-radius:20px;background:var(--accent-10);border:1px solid var(--accent-20);font-size:12px;color:var(--accent);font-weight:600;"></div>
+      <div id="user-pill" style="display:none;align-items:center;gap:8px;padding:4px 12px;border-radius:20px;background:rgba(17,22,37,.9);border:1px solid var(--border);">
+        <div id="nav-av" class="av" style="width:26px;height:26px;font-size:10px;"></div>
+        <span id="nav-name" style="font-size:13px;font-weight:600;color:var(--hi);"></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── 3-COLUMN GRID ──────────────────────────────────── -->
+  <div id="main-grid" style="flex:1;display:grid;grid-template-columns:minmax(180px,252px) 1fr minmax(170px,272px);overflow:hidden;min-height:0;">
+
+    <!-- ════════════════════════════════════════════════════
+         LEFT — PROFILE PANEL
+    ════════════════════════════════════════════════════ -->
+    <aside id="left-panel" style="border-right:1px solid var(--border);background:rgba(7,8,15,.45);display:flex;flex-direction:column;overflow:hidden;">
+
+      <!-- Profile card -->
+      <div style="padding:18px 14px 14px;border-bottom:1px solid var(--border);flex-shrink:0;">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+          <div id="my-av" class="av" style="width:58px;height:58px;font-size:20px;border-width:2px;"></div>
+          <div style="min-width:0;">
+            <div id="my-name" style="font-size:15px;font-weight:700;color:var(--hi);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
+            <div style="display:flex;align-items:center;gap:5px;margin-top:4px;">
+              <div class="online-dot" style="width:7px;height:7px;"></div>
+              <span style="font-size:11px;color:var(--accent);">Online</span>
+            </div>
+          </div>
+        </div>
+        <p id="my-bio" style="font-size:12px;color:var(--mid);line-height:1.55;margin-bottom:11px;"></p>
+        <div id="my-skills" style="display:flex;flex-wrap:wrap;gap:5px;"></div>
+      </div>
+
+      <!-- Stats row -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;background:var(--border);gap:1px;border-bottom:1px solid var(--border);flex-shrink:0;">
+        <div style="background:#07080F;padding:11px 12px;text-align:center;">
+          <div id="stat-conn" style="font-size:20px;font-weight:700;color:var(--accent);">0</div>
+          <div style="font-size:10px;color:var(--lo);">Connections</div>
+        </div>
+        <div style="background:#07080F;padding:11px 12px;text-align:center;">
+          <div id="stat-posts" style="font-size:20px;font-weight:700;color:var(--accent);">0</div>
+          <div style="font-size:10px;color:var(--lo);">Posts</div>
+        </div>
+      </div>
+
+      <!-- Edit profile toggle -->
+      <div style="padding:9px 12px;border-bottom:1px solid var(--border);flex-shrink:0;">
+        <button onclick="toggleEdit()"
+          style="width:100%;padding:7px;border-radius:8px;background:var(--accent-10);border:1px solid var(--border);color:var(--mid);font-size:12px;cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;gap:6px;"
+          onmouseover="this.style.borderColor='var(--accent-35)';this.style.color='var(--accent)'"
+          onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--mid)'">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Edit Profile
+        </button>
+      </div>
+
+      <!-- Edit form (collapse) -->
+      <div id="edit-panel" class="collapse" style="flex-shrink:0;">
+        <form onsubmit="submitEdit(event)" style="padding:12px;display:flex;flex-direction:column;gap:8px;border-bottom:1px solid var(--border);">
+          <input id="e-bio"    class="inp" type="text" placeholder="Bio"            style="font-size:12px;padding:7px 11px;" />
+          <input id="e-avatar" class="inp" type="url"  placeholder="Avatar URL"     style="font-size:12px;padding:7px 11px;" />
+          <input id="e-skills" class="inp" type="text" placeholder="Skills (comma-separated)" style="font-size:12px;padding:7px 11px;" />
+          <button type="submit" class="btn-ice" style="padding:7px;font-size:12px;">Save Changes</button>
+        </form>
+      </div>
+
+      <!-- Incoming friend requests -->
+      <div id="req-section" style="display:none;padding:10px 12px;border-bottom:1px solid var(--border);flex-shrink:0;">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+          <span class="sec-lbl">Requests</span>
+          <span id="req-badge" style="background:#f97316;color:#fff;font-size:10px;font-weight:700;border-radius:50%;width:16px;height:16px;display:flex;align-items:center;justify-content:center;"></span>
+        </div>
+        <div id="req-list" style="display:flex;flex-direction:column;gap:7px;"></div>
+      </div>
+
+      <div style="flex:1;"></div>
+    </aside>
+
+    <!-- ════════════════════════════════════════════════════
+         CENTER — LIVE FEED
+    ════════════════════════════════════════════════════ -->
+    <main style="display:flex;flex-direction:column;overflow:hidden;background:rgba(7,8,15,.22);">
+
+      <!-- Composer -->
+      <div style="padding:14px 16px;border-bottom:1px solid var(--border);background:rgba(7,8,15,.4);flex-shrink:0;">
+        <!-- Kind switcher -->
+        <div style="display:flex;background:rgba(7,8,15,.8);border-radius:8px;padding:3px;border:1px solid var(--border);margin-bottom:11px;">
+          <button id="k-collab" class="kpill kpill-collab" onclick="setKind('collab')">⚡ Collab Request</button>
+          <button id="k-debug"  class="kpill"              onclick="setKind('debug')">🐛 Debug Call</button>
+        </div>
+        <form id="post-form" onsubmit="submitPost(event)" style="display:flex;flex-direction:column;gap:8px;">
+          <input    id="p-title" class="inp" type="text" placeholder="What are you building? Give it a title…" required />
+          <textarea id="p-body"  class="inp" rows="2" placeholder="Describe the project or the bug you're hunting…"></textarea>
+          <div style="display:flex;gap:8px;">
+            <input id="p-tags" class="inp" type="text" placeholder="Tags: React, Solana, ML, C++…" style="flex:1;" />
+            <button id="pub-btn" type="submit" class="btn-ice" style="white-space:nowrap;padding:9px 16px;">Publish →</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Feed header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:9px 16px;border-bottom:1px solid var(--border);background:rgba(7,8,15,.25);flex-shrink:0;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="sec-lbl">Live Collaboration Feed</span>
+          <div style="width:6px;height:6px;border-radius:50%;background:var(--accent);animation:dot-pulse 2.8s ease-in-out infinite;"></div>
+        </div>
+        <span id="post-count" style="font-size:11px;color:var(--lo);"></span>
+      </div>
+
+      <!-- Feed list -->
+      <div id="feed" style="flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:9px;">
+        <div id="feed-empty" style="text-align:center;padding:56px 20px;color:var(--lo);font-size:13px;">
+          No posts yet. Be the first to broadcast a project call.
+        </div>
+      </div>
+    </main>
+
+    <!-- ════════════════════════════════════════════════════
+         RIGHT — PEER GRAPH
+    ════════════════════════════════════════════════════ -->
+    <aside style="border-left:1px solid var(--border);background:rgba(7,8,15,.45);display:flex;flex-direction:column;overflow:hidden;">
+
+      <div style="padding:11px 13px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+        <span class="sec-lbl">Developer Network</span>
+        <span id="peer-count" style="font-size:11px;color:var(--accent);font-weight:600;"></span>
+      </div>
+
+      <div style="padding:9px 10px;border-bottom:1px solid var(--border);flex-shrink:0;">
+        <input id="peer-search" class="inp" type="text" placeholder="Search developers…"
+          style="font-size:12px;padding:7px 11px;" oninput="renderPeers()" />
+      </div>
+
+      <div id="peer-list" style="flex:1;overflow-y:auto;padding:7px;display:flex;flex-direction:column;gap:2px;">
+        <div style="text-align:center;padding:40px 14px;color:var(--lo);font-size:12px;">Waiting for peers…</div>
+      </div>
+    </aside>
+
+  </div><!-- end grid -->
+
+  <!-- ════════════════════════════════════════════════════════
+       DM DRAWER  (fixed, slides up from bottom-right)
+  ════════════════════════════════════════════════════════ -->
+  <div id="dm-drawer">
+
+    <!-- Header bar (click to minimize) -->
+    <div id="dm-hdr" onclick="toggleDmMin()"
+      style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;cursor:pointer;background:rgba(17,22,37,.6);border-bottom:1px solid var(--border);"
+      onmouseover="this.style.background='rgba(17,22,37,.9)'"
+      onmouseout="this.style.background='rgba(17,22,37,.6)'">
+      <div style="display:flex;align-items:center;gap:9px;">
+        <div id="dm-peer-av" class="av" style="width:26px;height:26px;font-size:10px;"></div>
+        <span id="dm-peer-name" style="font-size:13px;font-weight:600;color:var(--hi);">Huddle DM</span>
+        <div class="online-dot" style="width:6px;height:6px;"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;" onclick="event.stopPropagation()">
+        <button onclick="closeDm()" style="background:transparent;border:none;color:var(--lo);cursor:pointer;font-size:18px;line-height:1;padding:2px 5px;border-radius:4px;transition:color .15s;"
+          onmouseover="this.style.color='#f87171'" onmouseout="this.style.color='var(--lo)'">×</button>
+      </div>
+    </div>
+
+    <!-- Chat timeline -->
+    <div id="dm-chat" style="height:272px;overflow-y:auto;padding:11px 12px;display:flex;flex-direction:column;gap:7px;background:rgba(7,8,15,.9);">
+      <div id="dm-empty" style="text-align:center;margin-top:80px;color:var(--lo);font-size:12px;">Click a peer to open a channel</div>
+    </div>
+
+    <!-- Input -->
+    <form id="dm-form" onsubmit="submitDm(event)"
+      style="display:flex;gap:8px;padding:10px 11px;border-top:1px solid var(--border);background:rgba(7,8,15,.97);">
+      <input id="dm-inp" class="inp" type="text" placeholder="Message…" style="font-size:13px;padding:8px 12px;flex:1;" />
+      <button type="submit" class="btn-ice" style="padding:8px 13px;font-size:13px;">Send</button>
+    </form>
+  </div>
+
+</div><!-- end #app -->
+
+<!-- ══════════════════════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════════════════════ -->
+<script>
+'use strict';
+
+// ── State ─────────────────────────────────────────────────────────────────
+let ws = null, me = null, authMode = 'register', postKind = 'collab';
+let editOpen = false, dmMin = false;
+let allUsers = {}, allPosts = [], allDms = {};
+let myFriends  = new Set(), myOut = new Set(), myIn = new Set();
+let onlineIds  = new Set();
+let activeDmId = null;
+
+// ── WebSocket ─────────────────────────────────────────────────────────────
 function connect() {
   ws = new WebSocket(`ws://${location.host}`);
-
-  ws.onopen = () => {
-    setStatus(true);
-  };
-
-  ws.onclose = () => {
-    setStatus(false);
-    setTimeout(connect, 3000);
-  };
-
-  ws.onerror = () => setStatus(false);
-
-  ws.onmessage = ({ data }) => {
-    const msg = JSON.parse(data);
-    handle(msg);
-  };
+  ws.onopen    = ()      => setWs(true);
+  ws.onclose   = ()      => { setWs(false); setTimeout(connect, 3000); };
+  ws.onerror   = ()      => setWs(false);
+  ws.onmessage = ({data})=> handle(JSON.parse(data));
 }
+function emit(p) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(p)); }
 
-function emit(payload) { ws.send(JSON.stringify(payload)); }
+// ── Message router ────────────────────────────────────────────────────────
+function handle(m) {
+  switch (m.type) {
 
-// ── Message handler ──────────────────────────────────────────────────────────
-function handle(msg) {
-  switch (msg.type) {
-    case 'welcome':
-      setOnlineCount(msg.onlineCount);
-      break;
-
-    case 'online_count':
-      setOnlineCount(msg.count);
-      break;
+    case 'welcome':      setCount(m.onlineCount); break;
+    case 'online_count': setCount(m.count);        break;
 
     case 'registered':
     case 'logged_in':
-      me = msg.user;
-      showApp();
-      break;
+      me = m.user; onlineIds.add(me.userId); showApp(); break;
 
     case 'state_snapshot':
-      allUsers    = msg.users;
-      allProjects = msg.projects;
-      allMessages = msg.messages;
-      renderAll();
-      break;
+      allUsers = m.users  || {};
+      allPosts = m.posts  || [];
+      allDms   = m.dms    || {};
+      myFriends = new Set(m.friends           || []);
+      myOut     = new Set(m.outgoingRequests   || []);
+      myIn      = new Set(m.incomingRequests   || []);
+      onlineIds = new Set(m.onlineUserIds      || []);
+      if (me) onlineIds.add(me.userId);
+      renderAll(); break;
 
     case 'user_joined':
+      allUsers[m.user.userId] = m.user;
+      onlineIds.add(m.user.userId);
+      renderPeers(); renderReqs(); break;
+
     case 'user_updated':
-      allUsers[msg.user.userId] = msg.user;
-      renderUserLists();
-      break;
+      allUsers[m.user.userId] = m.user;
+      if (me && m.user.userId === me.userId) { me = m.user; renderLeft(); }
+      renderPeers(); break;
 
     case 'user_left':
-      renderUserLists();
-      break;
+      onlineIds.delete(m.userId); renderPeers(); break;
 
-    case 'project_posted':
-      allProjects.push(msg.project);
-      renderProjects();
-      break;
+    case 'post_new':
+      allPosts.push(m.post);
+      prependCard(m.post, true);
+      updatePostCount(); break;
+
+    case 'post_deleted':
+      allPosts = allPosts.filter(p => p.postId !== m.postId);
+      document.getElementById('post-' + m.postId)?.remove();
+      updatePostCount(); checkEmpty(); break;
 
     case 'profile_updated':
-      me = msg.user;
-      allUsers[me.userId] = me;
-      renderProfile();
-      renderUserLists();
-      break;
+      me = m.user; allUsers[me.userId] = me;
+      renderLeft(); renderPeers(); break;
 
-    case 'dm_received':
-      allMessages.push(msg.dm);
-      if (activeDmUserId &&
-          (msg.dm.fromUserId === activeDmUserId || msg.dm.toUserId === activeDmUserId)) {
-        renderDmThread();
+    case 'friendship_changed': {
+      const other = m.userA === me.userId ? m.userB : m.userA;
+      if (m.action === 'added')   { myFriends.add(other); myOut.delete(other); myIn.delete(other); }
+      else                         { myFriends.delete(other); }
+      renderPeers(); renderReqs(); updateStats(); break;
+    }
+
+    case 'friend_request_sent':
+      myOut.add(m.toUserId); renderPeers(); break;
+
+    case 'friend_request_received':
+      myIn.add(m.fromUserId);
+      renderPeers(); renderReqs();
+      toast(`<b>${esc(m.fromUsername)}</b> wants to connect`, 'req'); break;
+
+    case 'friend_request_declined':
+      myIn.delete(m.fromUserId); myOut.delete(m.byUserId);
+      renderPeers(); renderReqs(); break;
+
+    case 'dm_received': {
+      const { dm } = m;
+      const key = dkey(dm.fromUserId, dm.toUserId);
+      if (!allDms[key]) allDms[key] = [];
+      allDms[key].push(dm);
+      const pid = dm.fromUserId === me.userId ? dm.toUserId : dm.fromUserId;
+      if (activeDmId === pid) renderThread();
+      else if (dm.fromUserId !== me.userId) {
+        const s = allUsers[dm.fromUserId];
+        toast(`💬 <b>${esc(s?.username||'?')}:</b> ${esc(dm.text.slice(0,55))}`, 'dm');
       }
       break;
+    }
 
-    case 'error':
-      document.getElementById('auth-error').textContent = msg.text;
-      document.getElementById('auth-error').classList.remove('hidden');
-      break;
+    case 'error': me ? toast(esc(m.text), 'err') : showAuthErr(m.text); break;
   }
 }
 
-// ── Auth ─────────────────────────────────────────────────────────────────────
-function switchTab(mode) {
+// ── Auth ──────────────────────────────────────────────────────────────────
+function switchAuthTab(mode) {
   authMode = mode;
-  document.getElementById('tab-register').className = mode === 'register'
-    ? 'tab-active flex-1 pb-2 text-sm font-medium transition-colors'
-    : 'flex-1 pb-2 text-sm font-medium text-gray-400 transition-colors';
-  document.getElementById('tab-login').className = mode === 'login'
-    ? 'tab-active flex-1 pb-2 text-sm font-medium transition-colors'
-    : 'flex-1 pb-2 text-sm font-medium text-gray-400 transition-colors';
-  document.getElementById('register-fields').style.display = mode === 'register' ? '' : 'none';
-  document.getElementById('auth-btn-label').textContent = mode === 'register' ? 'Create Account' : 'Sign In';
-  document.getElementById('auth-error').classList.add('hidden');
+  const isReg = mode === 'register';
+  const r = document.getElementById('at-reg'), l = document.getElementById('at-log');
+  r.style.background = isReg ? 'var(--accent)' : 'transparent';
+  r.style.color      = isReg ? 'var(--bg-deep)' : 'var(--lo)';
+  l.style.background = !isReg ? 'var(--accent)' : 'transparent';
+  l.style.color      = !isReg ? 'var(--bg-deep)' : 'var(--lo)';
+  document.getElementById('reg-fields').style.display = isReg ? 'flex' : 'none';
+  document.getElementById('reg-fields').style.flexDirection = 'column';
+  document.getElementById('reg-fields').style.gap = '11px';
+  document.getElementById('auth-btn').textContent = isReg ? 'Create Account' : 'Sign In';
+  hideAuthErr();
+}
+function submitAuth(e) {
+  e.preventDefault(); hideAuthErr();
+  const u = document.getElementById('f-user').value.trim();
+  if (!u) return;
+  if (authMode === 'register') {
+    emit({ type:'register', username:u,
+      bio:      document.getElementById('f-bio').value.trim(),
+      avatarUrl:document.getElementById('f-avatar').value.trim(),
+      skills:   document.getElementById('f-skills').value.split(',').map(s=>s.trim()).filter(Boolean) });
+  } else {
+    emit({ type:'login', username:u });
+  }
+}
+function showAuthErr(t) {
+  const e = document.getElementById('auth-err');
+  e.textContent = t; e.style.display = 'block';
+}
+function hideAuthErr() { document.getElementById('auth-err').style.display = 'none'; }
+
+// ── Show app ──────────────────────────────────────────────────────────────
+function showApp() {
+  document.getElementById('auth-wrap').style.display = 'none';
+  const app = document.getElementById('app');
+  app.style.display = 'flex';
 }
 
-function submitAuth(e) {
+// ── Render all ────────────────────────────────────────────────────────────
+function renderAll() { renderLeft(); renderFeed(); renderPeers(); renderReqs(); updateStats(); }
+
+// ── Left panel ────────────────────────────────────────────────────────────
+function renderLeft() {
+  if (!me) return;
+  avEl(document.getElementById('my-av'),  me, 56, 20);
+  avEl(document.getElementById('nav-av'), me, 26, 10);
+  document.getElementById('my-name').textContent  = me.username;
+  document.getElementById('nav-name').textContent = me.username;
+  document.getElementById('my-bio').textContent   = me.bio || 'No bio yet.';
+  const sk = document.getElementById('my-skills');
+  sk.innerHTML = (me.skills||[]).map(s=>`<span class="tag">${esc(s)}</span>`).join('')
+    || `<span style="font-size:11px;color:var(--lo);">No skills added</span>`;
+  document.getElementById('e-bio').value    = me.bio       || '';
+  document.getElementById('e-avatar').value = me.avatarUrl || '';
+  document.getElementById('e-skills').value = (me.skills||[]).join(', ');
+  document.getElementById('user-pill').style.display = 'flex';
+  updateStats();
+}
+
+function toggleEdit() {
+  editOpen = !editOpen;
+  document.getElementById('edit-panel').classList.toggle('open', editOpen);
+}
+function submitEdit(e) {
   e.preventDefault();
-  document.getElementById('auth-error').classList.add('hidden');
-  const username = document.getElementById('auth-username').value.trim();
-  if (authMode === 'register') {
-    const bio    = document.getElementById('auth-bio').value.trim();
-    const skills = document.getElementById('auth-skills').value.split(',').map(s => s.trim()).filter(Boolean);
-    emit({ type: 'register', username, bio, skills });
+  emit({ type:'update_profile',
+    bio:      document.getElementById('e-bio').value.trim(),
+    avatarUrl:document.getElementById('e-avatar').value.trim(),
+    skills:   document.getElementById('e-skills').value.split(',').map(s=>s.trim()).filter(Boolean) });
+  toggleEdit();
+}
+
+// ── Feed ──────────────────────────────────────────────────────────────────
+function setKind(k) {
+  postKind = k;
+  document.getElementById('k-collab').className = 'kpill' + (k==='collab' ? ' kpill-collab' : '');
+  document.getElementById('k-debug').className  = 'kpill' + (k==='debug'  ? ' kpill-debug'  : '');
+}
+function submitPost(e) {
+  e.preventDefault();
+  const t = document.getElementById('p-title').value.trim(); if (!t) return;
+  emit({ type:'post', title:t,
+    body: document.getElementById('p-body').value.trim(),
+    tags: document.getElementById('p-tags').value.split(',').map(s=>s.trim()).filter(Boolean),
+    kind: postKind });
+  e.target.reset(); setKind('collab');
+  const b = document.getElementById('pub-btn');
+  b.classList.add('pub-glow'); setTimeout(()=>b.classList.remove('pub-glow'), 700);
+}
+
+function renderFeed() {
+  const feed = document.getElementById('feed');
+  feed.innerHTML = '';
+  const sorted = [...allPosts].sort((a,b)=>b.createdAt-a.createdAt);
+  if (!sorted.length) {
+    feed.innerHTML = `<div id="feed-empty" style="text-align:center;padding:56px 20px;color:var(--lo);font-size:13px;">No posts yet. Be the first to broadcast a project call.</div>`;
   } else {
-    emit({ type: 'login', username });
+    sorted.forEach(p => feed.appendChild(buildCard(p, false)));
+  }
+  updatePostCount();
+}
+
+function prependCard(post, anim) {
+  document.getElementById('feed-empty')?.remove();
+  const feed = document.getElementById('feed');
+  feed.insertBefore(buildCard(post, anim), feed.firstChild);
+}
+
+function buildCard(p, anim) {
+  const au    = allUsers[p.authorId];
+  const isMe  = me && p.authorId === me.userId;
+  const el    = document.createElement('div');
+  el.id       = 'post-' + p.postId;
+  el.className = 'feed-card' + (anim ? ' post-new' : '');
+
+  const tagHtml = (p.tags||[]).map(t=>`<span class="tag">${esc(t)}</span>`).join('');
+  const kind    = p.kind === 'collab'
+    ? `<span class="badge-collab">⚡ Collab</span>`
+    : `<span class="badge-debug">🐛 Debug</span>`;
+
+  el.innerHTML = `
+    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:10px;">
+      <div style="display:flex;align-items:center;gap:9px;min-width:0;">
+        <div class="av" style="width:30px;height:30px;font-size:11px;flex-shrink:0;${avStyle(au)}">${avInit(au)}</div>
+        <div style="min-width:0;">
+          <div style="font-size:13px;font-weight:600;color:var(--hi);">${esc(au?.username||'Unknown')}</div>
+          <div style="font-size:10px;color:var(--lo);">${timeAgo(p.createdAt)}</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;">
+        ${kind}
+        ${isMe ? `<button onclick="deletePost('${p.postId}')"
+          style="background:transparent;border:none;color:var(--lo);cursor:pointer;font-size:15px;padding:2px 4px;border-radius:4px;transition:color .15s;"
+          onmouseover="this.style.color='#f87171'" onmouseout="this.style.color='var(--lo)'">×</button>` : ''}
+      </div>
+    </div>
+    <div style="font-size:14px;font-weight:700;color:var(--hi);margin-bottom:5px;">${esc(p.title)}</div>
+    ${p.body ? `<div style="font-size:12px;color:var(--mid);line-height:1.55;margin-bottom:9px;">${esc(p.body)}</div>` : ''}
+    ${tagHtml ? `<div style="display:flex;flex-wrap:wrap;gap:5px;">${tagHtml}</div>` : ''}
+  `;
+  return el;
+}
+
+function deletePost(id) { emit({ type:'delete_post', postId:id }); }
+
+function updatePostCount() {
+  const n = allPosts.length;
+  document.getElementById('post-count').textContent = n ? `${n} post${n>1?'s':''}` : '';
+  if (me) document.getElementById('stat-posts').textContent =
+    allPosts.filter(p=>p.authorId===me.userId).length;
+}
+function checkEmpty() {
+  const f = document.getElementById('feed');
+  if (!f.children.length)
+    f.innerHTML = `<div id="feed-empty" style="text-align:center;padding:56px 20px;color:var(--lo);font-size:13px;">No posts yet.</div>`;
+}
+
+// ── Peer graph ────────────────────────────────────────────────────────────
+function renderPeers() {
+  if (!me) return;
+  const q = (document.getElementById('peer-search')?.value||'').toLowerCase();
+  const peers = Object.values(allUsers).filter(u => u.userId !== me.userId
+    && (!q || u.username.toLowerCase().includes(q) || (u.skills||[]).some(s=>s.toLowerCase().includes(q))));
+
+  const list = document.getElementById('peer-list');
+  if (!peers.length) {
+    list.innerHTML = `<div style="text-align:center;padding:40px 14px;color:var(--lo);font-size:12px;">${q?'No match.':'Waiting for peers…'}</div>`;
+    document.getElementById('peer-count').textContent = '';
+    return;
+  }
+  const online  = peers.filter(u => onlineIds.has(u.userId));
+  const offline = peers.filter(u => !onlineIds.has(u.userId));
+  document.getElementById('peer-count').textContent = online.length ? `${online.length} online` : '';
+  list.innerHTML = [...online, ...offline].map(buildPeerCard).join('');
+}
+
+function buildPeerCard(u) {
+  const online = onlineIds.has(u.userId);
+  const chips  = (u.skills||[]).slice(0,3).map(s=>
+    `<span style="font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--lo);background:rgba(30,62,98,.5);border:1px solid var(--border);padding:1px 6px;border-radius:4px;">${esc(s)}</span>`
+  ).join('');
+
+  let actions = '';
+  if (myFriends.has(u.userId)) {
+    actions = `<div style="display:flex;gap:4px;margin-top:7px;flex-wrap:wrap;">
+      <span style="font-size:11px;color:var(--accent);padding:3px 8px;border:1px solid var(--accent-20);border-radius:6px;background:var(--accent-10);">✓ Connected</span>
+      <button onclick="sendDmTo('${u.userId}')" class="btn-outline" style="font-size:11px;padding:3px 9px;">DM</button>
+      <button onclick="unfriend('${u.userId}')" class="btn-ghost" style="font-size:11px;padding:3px 7px;">Remove</button>
+    </div>`;
+  } else if (myIn.has(u.userId)) {
+    actions = `<div style="display:flex;gap:4px;margin-top:7px;">
+      <span style="font-size:11px;color:#fb923c;padding:3px 8px;border:1px solid rgba(251,146,60,.25);border-radius:6px;">Wants to connect</span>
+      <button onclick="respond('${u.userId}',true)"  class="btn-outline" style="font-size:11px;padding:3px 8px;">Accept</button>
+      <button onclick="respond('${u.userId}',false)" class="btn-ghost"   style="font-size:11px;padding:3px 7px;">✕</button>
+    </div>`;
+  } else if (myOut.has(u.userId)) {
+    actions = `<div style="margin-top:7px;"><span style="font-size:11px;font-style:italic;color:var(--lo);padding:3px 9px;border:1px solid var(--border);border-radius:6px;">Pending…</span></div>`;
+  } else {
+    actions = `<div style="margin-top:7px;"><button onclick="addFriend('${u.userId}')" class="btn-outline" style="font-size:11px;padding:4px 10px;">+ Connect</button></div>`;
+  }
+
+  return `<div class="peer-card">
+    <div style="display:flex;align-items:flex-start;gap:9px;">
+      <div style="position:relative;flex-shrink:0;">
+        <div class="av" style="width:34px;height:34px;font-size:12px;${avStyle(u)}">${avInit(u)}</div>
+        ${online?`<div style="position:absolute;bottom:0;right:0;width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 5px var(--accent);border:2px solid var(--bg-deep);"></div>`:''}
+      </div>
+      <div style="min-width:0;flex:1;">
+        <div style="font-size:13px;font-weight:600;color:var(--hi);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(u.username)}</div>
+        ${u.bio?`<div style="font-size:11px;color:var(--lo);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${esc(u.bio)}</div>`:''}
+        ${chips?`<div style="display:flex;flex-wrap:wrap;gap:3px;margin-top:4px;">${chips}</div>`:''}
+        ${actions}
+      </div>
+    </div>
+  </div>`;
+}
+
+function addFriend(uid) { emit({ type:'friend_request', toUserId:uid }); }
+function respond(uid, accept) { emit({ type:'friend_respond', fromUserId:uid, accept }); }
+function unfriend(uid) { emit({ type:'unfriend', userId:uid }); }
+
+// ── Incoming requests (left panel) ───────────────────────────────────────
+function renderReqs() {
+  const sec = document.getElementById('req-section');
+  const lst = document.getElementById('req-list');
+  const bdg = document.getElementById('req-badge');
+  if (!myIn.size) { sec.style.display = 'none'; return; }
+  sec.style.display = 'block';
+  bdg.textContent = myIn.size;
+  lst.innerHTML = [...myIn].map(uid => {
+    const u = allUsers[uid]; if (!u) return '';
+    return `<div style="display:flex;align-items:center;justify-content:space-between;gap:5px;">
+      <div style="display:flex;align-items:center;gap:6px;min-width:0;">
+        <div class="av" style="width:26px;height:26px;font-size:10px;${avStyle(u)}">${avInit(u)}</div>
+        <span style="font-size:12px;font-weight:600;color:var(--hi);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(u.username)}</span>
+      </div>
+      <div style="display:flex;gap:4px;flex-shrink:0;">
+        <button onclick="respond('${uid}',true)"  class="btn-outline" style="font-size:11px;padding:3px 7px;">✓</button>
+        <button onclick="respond('${uid}',false)" class="btn-ghost"   style="font-size:11px;padding:3px 7px;">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── Stats ─────────────────────────────────────────────────────────────────
+function updateStats() {
+  document.getElementById('stat-conn').textContent = myFriends.size;
+  if (me) document.getElementById('stat-posts').textContent =
+    allPosts.filter(p=>p.authorId===me.userId).length;
+}
+
+// ── DM Drawer ─────────────────────────────────────────────────────────────
+function sendDmTo(uid) {
+  activeDmId = uid; dmMin = false;
+  const drawer = document.getElementById('dm-drawer');
+  drawer.classList.add('open');
+  const peer = allUsers[uid];
+  document.getElementById('dm-peer-name').textContent = peer?.username || '?';
+  avEl(document.getElementById('dm-peer-av'), peer, 26, 10);
+  document.getElementById('dm-chat').style.display = '';
+  document.getElementById('dm-form').style.display = '';
+  renderThread();
+  setTimeout(() => document.getElementById('dm-inp').focus(), 320);
+}
+function closeDm() {
+  document.getElementById('dm-drawer').classList.remove('open');
+  activeDmId = null;
+}
+function toggleDmMin() {
+  dmMin = !dmMin;
+  document.getElementById('dm-chat').style.display = dmMin ? 'none' : '';
+  document.getElementById('dm-form').style.display = dmMin ? 'none' : '';
+}
+function renderThread() {
+  if (!activeDmId || !me) return;
+  const key    = dkey(me.userId, activeDmId);
+  const thread = allDms[key] || [];
+  const chat   = document.getElementById('dm-chat');
+  if (!thread.length) {
+    chat.innerHTML = `<div id="dm-empty" style="text-align:center;margin-top:80px;color:var(--lo);font-size:12px;">No messages yet.</div>`;
+    return;
+  }
+  chat.innerHTML = thread.map(m => {
+    const mine = m.fromUserId === me.userId;
+    return `<div style="display:flex;justify-content:${mine?'flex-end':'flex-start'};">
+      <div class="${mine?'bub-mine':'bub-theirs'}">
+        <span style="font-size:13px;">${esc(m.text)}</span>
+        <div style="font-size:10px;color:${mine?'rgba(0,229,255,.45)':'var(--lo)'};margin-top:3px;text-align:${mine?'right':'left'};">${timeAgo(m.sentAt)}</div>
+      </div>
+    </div>`;
+  }).join('');
+  chat.scrollTop = chat.scrollHeight;
+}
+function submitDm(e) {
+  e.preventDefault();
+  if (!activeDmId) return;
+  const t = document.getElementById('dm-inp').value.trim(); if (!t) return;
+  emit({ type:'send_dm', toUserId:activeDmId, text:t });
+  document.getElementById('dm-inp').value = '';
+}
+
+// ── Toasts ────────────────────────────────────────────────────────────────
+function toast(html, type) {
+  const area = document.getElementById('toasts');
+  const el   = document.createElement('div');
+  const col  = type === 'dm' ? 'var(--accent-10)' : type === 'err' ? 'rgba(239,68,68,.15)' : 'rgba(30,62,98,.9)';
+  const bdr  = type === 'dm' ? 'var(--accent-35)' : type === 'err' ? '#ef4444'             : 'var(--border)';
+  el.className = 't-in';
+  el.style.cssText = `pointer-events:auto;display:flex;align-items:center;gap:10px;padding:11px 13px;border-radius:10px;border:1px solid ${bdr};background:${col};backdrop-filter:blur(14px);font-size:13px;color:var(--hi);cursor:pointer;`;
+  el.innerHTML = html + `<span style="color:var(--lo);margin-left:auto;font-size:16px;">×</span>`;
+  el.onclick = () => killToast(el);
+  area.prepend(el);
+  setTimeout(() => killToast(el), 5000);
+}
+function killToast(el) {
+  el.className = 't-out'; setTimeout(() => el.remove(), 260);
+}
+
+// ── Status ────────────────────────────────────────────────────────────────
+function setWs(on) {
+  const d = document.getElementById('ws-dot'), l = document.getElementById('ws-lbl');
+  d.style.background = on ? 'var(--accent)' : '#ef4444';
+  d.style.boxShadow  = on ? '0 0 5px var(--accent)' : 'none';
+  l.textContent = on ? 'Connected' : 'Reconnecting…';
+  l.style.color = on ? 'var(--accent)' : 'var(--lo)';
+}
+function setCount(n) {
+  const p = document.getElementById('online-pill');
+  p.textContent = `${n} online`; p.style.display = 'block';
+}
+
+// ── Avatar helpers ────────────────────────────────────────────────────────
+function avColor(name) {
+  let h = 0;
+  for (const c of (name||'x')) h = (h<<5)-h+c.charCodeAt(0);
+  return `hsl(${Math.abs(h)%360},55%,38%)`;
+}
+function avInit(u) {
+  if (!u?.username) return '?';
+  if (u.avatarUrl) return '';
+  const p = u.username.split(/[\s_-]/);
+  return (p.length>1 ? p[0][0]+p[1][0] : u.username.slice(0,2)).toUpperCase();
+}
+function avStyle(u) {
+  if (!u) return `background:#1E3E62;`;
+  const bg = avColor(u.username);
+  return u.avatarUrl
+    ? `background-image:url("${u.avatarUrl.replace(/"/g,'%22')}");background-color:${bg};`
+    : `background:${bg};`;
+}
+function avEl(el, u, sz, fs) {
+  if (!el||!u) return;
+  el.style.width = el.style.height = sz+'px';
+  el.style.fontSize = fs+'px';
+  if (u.avatarUrl) {
+    el.style.backgroundImage = `url("${u.avatarUrl.replace(/"/g,'%22')}")`;
+    el.style.backgroundColor = avColor(u.username);
+    el.textContent = '';
+  } else {
+    el.style.backgroundImage = '';
+    el.style.backgroundColor = avColor(u.username);
+    el.textContent = avInit(u);
   }
 }
 
-// ── App display ──────────────────────────────────────────────────────────────
-function showApp() {
-  document.getElementById('auth-screen').classList.add('hidden');
-  document.getElementById('main-screen').classList.remove('hidden');
-  document.getElementById('user-badge').textContent = me.username;
-  document.getElementById('user-badge').classList.remove('hidden');
+// ── Utilities ─────────────────────────────────────────────────────────────
+function dkey(a,b) { return [a,b].sort().join(':'); }
+function esc(s) {
+  return String(s||'')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
-
-function renderAll() {
-  renderUserLists();
-  renderProjects();
-  renderProfile();
-}
-
-// ── Tabs ─────────────────────────────────────────────────────────────────────
-const TABS = ['feed', 'profile', 'messages'];
-function openTab(name) {
-  TABS.forEach(t => {
-    document.getElementById(`tab-${t}`).classList.toggle('hidden', t !== name);
-    const btn = document.getElementById(`nav-${t}`);
-    btn.className = t === name
-      ? 'tab-active px-4 py-3 text-sm font-medium transition-colors mr-1'
-      : 'px-4 py-3 text-sm font-medium text-gray-400 transition-colors mr-1';
-  });
-}
-
-// ── User lists ────────────────────────────────────────────────────────────────
-function renderUserLists() {
-  const users = Object.values(allUsers).filter(u => u.userId !== me?.userId);
-
-  const sidebar = document.getElementById('user-list');
-  sidebar.innerHTML = users.map(u => `
-    <li class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-800 cursor-pointer text-sm" onclick="startDm('${u.userId}')">
-      <span class="w-2 h-2 rounded-full bg-green-500 shrink-0"></span>
-      <span class="truncate">${esc(u.username)}</span>
-    </li>`).join('') || '<li class="px-3 py-2 text-xs text-gray-600">No other users yet</li>';
-
-  const dmList = document.getElementById('dm-user-list');
-  dmList.innerHTML = users.map(u => `
-    <li class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-800 cursor-pointer text-sm ${activeDmUserId === u.userId ? 'bg-gray-800' : ''}"
-        onclick="startDm('${u.userId}')">
-      <span class="w-2 h-2 rounded-full bg-green-500 shrink-0"></span>
-      <span class="truncate">${esc(u.username)}</span>
-    </li>`).join('') || '<li class="px-3 py-2 text-xs text-gray-600">No users yet</li>';
-}
-
-// ── Projects ──────────────────────────────────────────────────────────────────
-function postProject(e) {
-  e.preventDefault();
-  const title = document.getElementById('proj-title').value.trim();
-  const description = document.getElementById('proj-desc').value.trim();
-  const tags = document.getElementById('proj-tags').value.split(',').map(s => s.trim()).filter(Boolean);
-  emit({ type: 'post_project', title, description, tags });
-  e.target.reset();
-}
-
-function renderProjects() {
-  const list = document.getElementById('project-list');
-  const sorted = [...allProjects].reverse();
-  list.innerHTML = sorted.map(p => {
-    const owner = allUsers[p.ownerId];
-    const ownerName = owner ? esc(owner.username) : 'Unknown';
-    const tagsHtml = p.tags.map(t =>
-      `<span class="px-2 py-0.5 bg-indigo-900/50 text-indigo-300 rounded-full text-xs">${esc(t)}</span>`
-    ).join('');
-    return `
-    <div class="bg-gray-900 rounded-xl border border-gray-800 p-4">
-      <div class="flex items-start justify-between gap-2 mb-1">
-        <h4 class="font-semibold text-sm">${esc(p.title)}</h4>
-        <span class="text-xs text-gray-500 shrink-0">${timeAgo(p.createdAt)}</span>
-      </div>
-      <p class="text-gray-400 text-sm mb-3">${esc(p.description)}</p>
-      <div class="flex flex-wrap gap-1.5 mb-3">${tagsHtml}</div>
-      <div class="text-xs text-gray-500">Posted by <span class="text-gray-300">${ownerName}</span></div>
-    </div>`;
-  }).join('') || '<p class="text-gray-600 text-sm text-center py-8">No projects yet. Be the first to post!</p>';
-}
-
-// ── Profile ───────────────────────────────────────────────────────────────────
-function renderProfile() {
-  if (!me) return;
-  document.getElementById('pv-username').textContent = me.username;
-  document.getElementById('pv-bio').textContent = me.bio || 'No bio yet.';
-  document.getElementById('pv-skills').innerHTML = (me.skills || []).map(s =>
-    `<span class="skill-tag px-2.5 py-1 bg-indigo-900/60 text-indigo-300 rounded-full text-xs font-medium">${esc(s)}</span>`
-  ).join('') || '<span class="text-xs text-gray-600">No skills listed</span>';
-
-  document.getElementById('upd-bio').value = me.bio || '';
-  document.getElementById('upd-skills').value = (me.skills || []).join(', ');
-}
-
-function updateProfile(e) {
-  e.preventDefault();
-  const bio    = document.getElementById('upd-bio').value.trim();
-  const skills = document.getElementById('upd-skills').value.split(',').map(s => s.trim()).filter(Boolean);
-  emit({ type: 'update_profile', bio, skills });
-}
-
-// ── Direct Messages ───────────────────────────────────────────────────────────
-function startDm(userId) {
-  activeDmUserId = userId;
-  openTab('messages');
-  const user = allUsers[userId];
-  document.getElementById('dm-header').textContent = user ? `Chat with ${user.username}` : 'Chat';
-  renderUserLists();
-  renderDmThread();
-  document.getElementById('dm-input').focus();
-}
-
-function renderDmThread() {
-  if (!activeDmUserId || !me) return;
-  const thread = allMessages.filter(m =>
-    (m.fromUserId === me.userId && m.toUserId === activeDmUserId) ||
-    (m.fromUserId === activeDmUserId && m.toUserId === me.userId)
-  );
-  const container = document.getElementById('dm-messages');
-  container.innerHTML = thread.map(m => {
-    const isMine = m.fromUserId === me.userId;
-    return `
-    <div class="flex ${isMine ? 'justify-end' : 'justify-start'}">
-      <div class="max-w-xs px-3.5 py-2 rounded-2xl text-sm ${isMine ? 'bg-indigo-600 text-white rounded-br-sm' : 'bg-gray-800 text-gray-100 rounded-bl-sm'}">
-        ${esc(m.text)}
-      </div>
-    </div>`;
-  }).join('') || '<p class="text-center text-xs text-gray-600 pt-8">Start the conversation!</p>';
-  container.scrollTop = container.scrollHeight;
-}
-
-function sendDm(e) {
-  e.preventDefault();
-  if (!activeDmUserId) return;
-  const text = document.getElementById('dm-input').value.trim();
-  if (!text) return;
-  emit({ type: 'send_dm', toUserId: activeDmUserId, text });
-  document.getElementById('dm-input').value = '';
-}
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-function setStatus(online) {
-  document.getElementById('status-dot').className =
-    `inline-block w-2 h-2 rounded-full ${online ? 'bg-green-500' : 'bg-red-500'}`;
-  document.getElementById('status-text').textContent = online ? 'Connected' : 'Reconnecting…';
-}
-
-function setOnlineCount(n) {
-  const badge = document.getElementById('online-badge');
-  badge.textContent = `${n} online`;
-  badge.classList.remove('hidden');
-}
-
-function esc(str) {
-  if (!str) return '';
-  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
 function timeAgo(ts) {
-  const s = Math.floor((Date.now() - ts) / 1000);
-  if (s < 60)   return 'just now';
-  if (s < 3600) return `${Math.floor(s/60)}m ago`;
-  if (s < 86400) return `${Math.floor(s/3600)}h ago`;
-  return `${Math.floor(s/86400)}d ago`;
+  const s = Math.floor((Date.now()-ts)/1000);
+  if (s<5)     return 'just now';
+  if (s<60)    return s+'s ago';
+  if (s<3600)  return Math.floor(s/60)+'m ago';
+  if (s<86400) return Math.floor(s/3600)+'h ago';
+  return Math.floor(s/86400)+'d ago';
 }
 
-// ── Boot ──────────────────────────────────────────────────────────────────────
+// ── Boot ──────────────────────────────────────────────────────────────────
 connect();
 </script>
 </body>
