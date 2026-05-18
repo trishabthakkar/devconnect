@@ -1,0 +1,14 @@
+{
+  "name": "devconnect",
+  "version": "1.0.0",
+  "description": "Real-time networking and project collaboration platform for CS students",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node --watch server/index.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0",
+    "uuid": "^11.1.0"
+  }
+}

@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DevConnect</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* custom scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #4f46e5; border-radius: 3px; }
+    .tab-active { border-bottom: 2px solid #6366f1; color: #6366f1; }
+    .skill-tag  { display: inline-flex; align-items: center; gap: 4px; }
+  </style>
+</head>
+<body class="h-full bg-gray-950 text-gray-100 font-sans">
+
+<!-- ═══════════════════════════════════════ APP SHELL ═══════════════════════ -->
+<div id="app" class="flex flex-col h-full">
+
+  <!-- Top bar -->
+  <header class="flex items-center justify-between px-6 py-3 bg-gray-900 border-b border-gray-800 shrink-0">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white font-bold text-sm">DC</div>
+      <span class="font-semibold text-lg tracking-tight">DevConnect</span>
+    </div>
+    <div class="flex items-center gap-4 text-sm">
+      <span id="status-dot" class="inline-block w-2 h-2 rounded-full bg-red-500"></span>
+      <span id="status-text" class="text-gray-400">Connecting…</span>
+      <span id="online-badge" class="hidden px-2 py-0.5 rounded-full bg-indigo-900 text-indigo-300 text-xs font-medium"></span>
+      <span id="user-badge" class="hidden px-3 py-1 rounded-full bg-indigo-700 text-white text-xs font-semibold"></span>
+    </div>
+  </header>
+
+  <!-- Auth overlay -->
+  <div id="auth-screen" class="flex-1 flex items-center justify-center">
+    <div class="w-full max-w-sm bg-gray-900 rounded-2xl p-8 shadow-xl border border-gray-800">
+      <h2 class="text-2xl font-bold mb-1">Welcome to DevConnect</h2>
+      <p class="text-gray-400 text-sm mb-6">Connect with CS students. Build together.</p>
+
+      <div class="flex gap-2 mb-5">
+        <button id="tab-register" onclick="switchTab('register')" class="tab-active flex-1 pb-2 text-sm font-medium transition-colors">Register</button>
+        <button id="tab-login"    onclick="switchTab('login')"    class="flex-1 pb-2 text-sm font-medium text-gray-400 transition-colors">Login</button>
+      </div>
+
+      <form id="auth-form" onsubmit="submitAuth(event)" class="space-y-3">
+        <input id="auth-username" type="text" placeholder="Username" required
+          class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-indigo-500 transition" />
+
+        <div id="register-fields" class="space-y-3">
+          <input id="auth-bio" type="text" placeholder="Short bio (optional)"
+            class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-indigo-500 transition" />
+          <input id="auth-skills" type="text" placeholder="Skills, comma-separated (e.g. React, Python)"
+            class="w-full bg-gray-800 border border-gray-700 rounded-lg px-4 py-2.5 text-sm outline-none focus:border-indigo-500 transition" />
+        </div>
+
+        <button type="submit"
+          class="w-full bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 rounded-lg py-2.5 font-semibold text-sm transition mt-1">
+          <span id="auth-btn-label">Create Account</span>
+        </button>
+        <p id="auth-error" class="text-red-400 text-xs text-center hidden"></p>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main app (hidden until authed) -->
+  <div id="main-screen" class="hidden flex-1 flex overflow-hidden">
+
+    <!-- Left sidebar: online users -->
+    <aside class="w-56 bg-gray-900 border-r border-gray-800 flex flex-col shrink-0">
+      <div class="px-4 py-3 border-b border-gray-800 text-xs font-semibold text-gray-500 uppercase tracking-wider">Online Now</div>
+      <ul id="user-list" class="flex-1 overflow-y-auto py-2 space-y-0.5 px-2"></ul>
+    </aside>
+
+    <!-- Center panel: tabs -->
+    <main class="flex-1 flex flex-col overflow-hidden">
+      <!-- Tabs -->
+      <nav class="flex gap-0 border-b border-gray-800 bg-gray-900 px-4 shrink-0">
+        <button onclick="openTab('feed')"     id="nav-feed"     class="tab-active px-4 py-3 text-sm font-medium transition-colors mr-1">Project Feed</button>
+        <button onclick="openTab('profile')"  id="nav-profile"  class="px-4 py-3 text-sm font-medium text-gray-400 transition-colors mr-1">My Profile</button>
+        <button onclick="openTab('messages')" id="nav-messages" class="px-4 py-3 text-sm font-medium text-gray-400 transition-colors">Messages</button>
+      </nav>
+
+      <!-- Feed tab -->
+      <section id="tab-feed" class="flex-1 overflow-y-auto p-5 space-y-4">
+        <!-- Post project card -->
+        <div class="bg-gray-900 rounded-xl border border-gray-800 p-4">
+          <h3 class="font-semibold mb-3 text-sm text-gray-300">Post a Project</h3>
+          <form onsubmit="postProject(event)" class="space-y-2">
+            <input id="proj-title" type="text" placeholder="Project title" required
+              class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500 transition" />
+            <textarea id="proj-desc" placeholder="Short description…" rows="2"
+              class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500 transition resize-none"></textarea>
+            <input id="proj-tags" type="text" placeholder="Tags (e.g. React, AI, Open Source)"
+              class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500 transition" />
+            <button type="submit"
+              class="bg-indigo-600 hover:bg-indigo-500 px-4 py-1.5 rounded-lg text-sm font-medium transition">Publish</button>
+          </form>
+        </div>
+        <!-- Live project cards -->
+        <div id="project-list" class="space-y-3"></div>
+      </section>
+
+      <!-- Profile tab -->
+      <section id="tab-profile" class="hidden flex-1 overflow-y-auto p-5">
+        <div class="max-w-lg space-y-4">
+          <h3 class="font-semibold text-lg">My Profile</h3>
+          <div id="profile-view" class="bg-gray-900 rounded-xl border border-gray-800 p-5 space-y-3">
+            <div class="text-2xl font-bold" id="pv-username"></div>
+            <p class="text-gray-400 text-sm" id="pv-bio"></p>
+            <div id="pv-skills" class="flex flex-wrap gap-2"></div>
+          </div>
+          <div class="bg-gray-900 rounded-xl border border-gray-800 p-5 space-y-3">
+            <h4 class="text-sm font-semibold text-gray-400">Update Profile</h4>
+            <form onsubmit="updateProfile(event)" class="space-y-2">
+              <input id="upd-bio" type="text" placeholder="Bio"
+                class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500 transition" />
+              <input id="upd-skills" type="text" placeholder="Skills (comma-separated)"
+                class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500 transition" />
+              <button type="submit"
+                class="bg-indigo-600 hover:bg-indigo-500 px-4 py-1.5 rounded-lg text-sm font-medium transition">Save</button>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <!-- Messages tab -->
+      <section id="tab-messages" class="hidden flex-1 flex overflow-hidden">
+        <div class="w-48 border-r border-gray-800 flex flex-col bg-gray-900 shrink-0">
+          <div class="px-4 py-3 border-b border-gray-800 text-xs font-semibold text-gray-500 uppercase tracking-wider">Users</div>
+          <ul id="dm-user-list" class="flex-1 overflow-y-auto py-2 space-y-0.5 px-2"></ul>
+        </div>
+        <div class="flex-1 flex flex-col overflow-hidden">
+          <div id="dm-header" class="px-4 py-3 border-b border-gray-800 text-sm font-medium text-gray-400 shrink-0">Select a user to message</div>
+          <div id="dm-messages" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
+          <form id="dm-form" onsubmit="sendDm(event)" class="px-4 py-3 border-t border-gray-800 flex gap-2 shrink-0">
+            <input id="dm-input" type="text" placeholder="Type a message…"
+              class="flex-1 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm outline-none focus:border-indigo-500 transition" />
+            <button type="submit"
+              class="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-lg text-sm font-medium transition">Send</button>
+          </form>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script>
+// ── State ────────────────────────────────────────────────────────────────────
+let ws, me = null, authMode = 'register';
+let allUsers = {}, allProjects = [], allMessages = [];
+let activeDmUserId = null;
+
+// ── WebSocket ────────────────────────────────────────────────────────────────
+function connect() {
+  ws = new WebSocket(`ws://${location.host}`);
+
+  ws.onopen = () => {
+    setStatus(true);
+  };
+
+  ws.onclose = () => {
+    setStatus(false);
+    setTimeout(connect, 3000);
+  };
+
+  ws.onerror = () => setStatus(false);
+
+  ws.onmessage = ({ data }) => {
+    const msg = JSON.parse(data);
+    handle(msg);
+  };
+}
+
+function emit(payload) { ws.send(JSON.stringify(payload)); }
+
+// ── Message handler ──────────────────────────────────────────────────────────
+function handle(msg) {
+  switch (msg.type) {
+    case 'welcome':
+      setOnlineCount(msg.onlineCount);
+      break;
+
+    case 'online_count':
+      setOnlineCount(msg.count);
+      break;
+
+    case 'registered':
+    case 'logged_in':
+      me = msg.user;
+      showApp();
+      break;
+
+    case 'state_snapshot':
+      allUsers    = msg.users;
+      allProjects = msg.projects;
+      allMessages = msg.messages;
+      renderAll();
+      break;
+
+    case 'user_joined':
+    case 'user_updated':
+      allUsers[msg.user.userId] = msg.user;
+      renderUserLists();
+      break;
+
+    case 'user_left':
+      renderUserLists();
+      break;
+
+    case 'project_posted':
+      allProjects.push(msg.project);
+      renderProjects();
+      break;
+
+    case 'profile_updated':
+      me = msg.user;
+      allUsers[me.userId] = me;
+      renderProfile();
+      renderUserLists();
+      break;
+
+    case 'dm_received':
+      allMessages.push(msg.dm);
+      if (activeDmUserId &&
+          (msg.dm.fromUserId === activeDmUserId || msg.dm.toUserId === activeDmUserId)) {
+        renderDmThread();
+      }
+      break;
+
+    case 'error':
+      document.getElementById('auth-error').textContent = msg.text;
+      document.getElementById('auth-error').classList.remove('hidden');
+      break;
+  }
+}
+
+// ── Auth ─────────────────────────────────────────────────────────────────────
+function switchTab(mode) {
+  authMode = mode;
+  document.getElementById('tab-register').className = mode === 'register'
+    ? 'tab-active flex-1 pb-2 text-sm font-medium transition-colors'
+    : 'flex-1 pb-2 text-sm font-medium text-gray-400 transition-colors';
+  document.getElementById('tab-login').className = mode === 'login'
+    ? 'tab-active flex-1 pb-2 text-sm font-medium transition-colors'
+    : 'flex-1 pb-2 text-sm font-medium text-gray-400 transition-colors';
+  document.getElementById('register-fields').style.display = mode === 'register' ? '' : 'none';
+  document.getElementById('auth-btn-label').textContent = mode === 'register' ? 'Create Account' : 'Sign In';
+  document.getElementById('auth-error').classList.add('hidden');
+}
+
+function submitAuth(e) {
+  e.preventDefault();
+  document.getElementById('auth-error').classList.add('hidden');
+  const username = document.getElementById('auth-username').value.trim();
+  if (authMode === 'register') {
+    const bio    = document.getElementById('auth-bio').value.trim();
+    const skills = document.getElementById('auth-skills').value.split(',').map(s => s.trim()).filter(Boolean);
+    emit({ type: 'register', username, bio, skills });
+  } else {
+    emit({ type: 'login', username });
+  }
+}
+
+// ── App display ──────────────────────────────────────────────────────────────
+function showApp() {
+  document.getElementById('auth-screen').classList.add('hidden');
+  document.getElementById('main-screen').classList.remove('hidden');
+  document.getElementById('user-badge').textContent = me.username;
+  document.getElementById('user-badge').classList.remove('hidden');
+}
+
+function renderAll() {
+  renderUserLists();
+  renderProjects();
+  renderProfile();
+}
+
+// ── Tabs ─────────────────────────────────────────────────────────────────────
+const TABS = ['feed', 'profile', 'messages'];
+function openTab(name) {
+  TABS.forEach(t => {
+    document.getElementById(`tab-${t}`).classList.toggle('hidden', t !== name);
+    const btn = document.getElementById(`nav-${t}`);
+    btn.className = t === name
+      ? 'tab-active px-4 py-3 text-sm font-medium transition-colors mr-1'
+      : 'px-4 py-3 text-sm font-medium text-gray-400 transition-colors mr-1';
+  });
+}
+
+// ── User lists ────────────────────────────────────────────────────────────────
+function renderUserLists() {
+  const users = Object.values(allUsers).filter(u => u.userId !== me?.userId);
+
+  const sidebar = document.getElementById('user-list');
+  sidebar.innerHTML = users.map(u => `
+    <li class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-800 cursor-pointer text-sm" onclick="startDm('${u.userId}')">
+      <span class="w-2 h-2 rounded-full bg-green-500 shrink-0"></span>
+      <span class="truncate">${esc(u.username)}</span>
+    </li>`).join('') || '<li class="px-3 py-2 text-xs text-gray-600">No other users yet</li>';
+
+  const dmList = document.getElementById('dm-user-list');
+  dmList.innerHTML = users.map(u => `
+    <li class="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-gray-800 cursor-pointer text-sm ${activeDmUserId === u.userId ? 'bg-gray-800' : ''}"
+        onclick="startDm('${u.userId}')">
+      <span class="w-2 h-2 rounded-full bg-green-500 shrink-0"></span>
+      <span class="truncate">${esc(u.username)}</span>
+    </li>`).join('') || '<li class="px-3 py-2 text-xs text-gray-600">No users yet</li>';
+}
+
+// ── Projects ──────────────────────────────────────────────────────────────────
+function postProject(e) {
+  e.preventDefault();
+  const title = document.getElementById('proj-title').value.trim();
+  const description = document.getElementById('proj-desc').value.trim();
+  const tags = document.getElementById('proj-tags').value.split(',').map(s => s.trim()).filter(Boolean);
+  emit({ type: 'post_project', title, description, tags });
+  e.target.reset();
+}
+
+function renderProjects() {
+  const list = document.getElementById('project-list');
+  const sorted = [...allProjects].reverse();
+  list.innerHTML = sorted.map(p => {
+    const owner = allUsers[p.ownerId];
+    const ownerName = owner ? esc(owner.username) : 'Unknown';
+    const tagsHtml = p.tags.map(t =>
+      `<span class="px-2 py-0.5 bg-indigo-900/50 text-indigo-300 rounded-full text-xs">${esc(t)}</span>`
+    ).join('');
+    return `
+    <div class="bg-gray-900 rounded-xl border border-gray-800 p-4">
+      <div class="flex items-start justify-between gap-2 mb-1">
+        <h4 class="font-semibold text-sm">${esc(p.title)}</h4>
+        <span class="text-xs text-gray-500 shrink-0">${timeAgo(p.createdAt)}</span>
+      </div>
+      <p class="text-gray-400 text-sm mb-3">${esc(p.description)}</p>
+      <div class="flex flex-wrap gap-1.5 mb-3">${tagsHtml}</div>
+      <div class="text-xs text-gray-500">Posted by <span class="text-gray-300">${ownerName}</span></div>
+    </div>`;
+  }).join('') || '<p class="text-gray-600 text-sm text-center py-8">No projects yet. Be the first to post!</p>';
+}
+
+// ── Profile ───────────────────────────────────────────────────────────────────
+function renderProfile() {
+  if (!me) return;
+  document.getElementById('pv-username').textContent = me.username;
+  document.getElementById('pv-bio').textContent = me.bio || 'No bio yet.';
+  document.getElementById('pv-skills').innerHTML = (me.skills || []).map(s =>
+    `<span class="skill-tag px-2.5 py-1 bg-indigo-900/60 text-indigo-300 rounded-full text-xs font-medium">${esc(s)}</span>`
+  ).join('') || '<span class="text-xs text-gray-600">No skills listed</span>';
+
+  document.getElementById('upd-bio').value = me.bio || '';
+  document.getElementById('upd-skills').value = (me.skills || []).join(', ');
+}
+
+function updateProfile(e) {
+  e.preventDefault();
+  const bio    = document.getElementById('upd-bio').value.trim();
+  const skills = document.getElementById('upd-skills').value.split(',').map(s => s.trim()).filter(Boolean);
+  emit({ type: 'update_profile', bio, skills });
+}
+
+// ── Direct Messages ───────────────────────────────────────────────────────────
+function startDm(userId) {
+  activeDmUserId = userId;
+  openTab('messages');
+  const user = allUsers[userId];
+  document.getElementById('dm-header').textContent = user ? `Chat with ${user.username}` : 'Chat';
+  renderUserLists();
+  renderDmThread();
+  document.getElementById('dm-input').focus();
+}
+
+function renderDmThread() {
+  if (!activeDmUserId || !me) return;
+  const thread = allMessages.filter(m =>
+    (m.fromUserId === me.userId && m.toUserId === activeDmUserId) ||
+    (m.fromUserId === activeDmUserId && m.toUserId === me.userId)
+  );
+  const container = document.getElementById('dm-messages');
+  container.innerHTML = thread.map(m => {
+    const isMine = m.fromUserId === me.userId;
+    return `
+    <div class="flex ${isMine ? 'justify-end' : 'justify-start'}">
+      <div class="max-w-xs px-3.5 py-2 rounded-2xl text-sm ${isMine ? 'bg-indigo-600 text-white rounded-br-sm' : 'bg-gray-800 text-gray-100 rounded-bl-sm'}">
+        ${esc(m.text)}
+      </div>
+    </div>`;
+  }).join('') || '<p class="text-center text-xs text-gray-600 pt-8">Start the conversation!</p>';
+  container.scrollTop = container.scrollHeight;
+}
+
+function sendDm(e) {
+  e.preventDefault();
+  if (!activeDmUserId) return;
+  const text = document.getElementById('dm-input').value.trim();
+  if (!text) return;
+  emit({ type: 'send_dm', toUserId: activeDmUserId, text });
+  document.getElementById('dm-input').value = '';
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+function setStatus(online) {
+  document.getElementById('status-dot').className =
+    `inline-block w-2 h-2 rounded-full ${online ? 'bg-green-500' : 'bg-red-500'}`;
+  document.getElementById('status-text').textContent = online ? 'Connected' : 'Reconnecting…';
+}
+
+function setOnlineCount(n) {
+  const badge = document.getElementById('online-badge');
+  badge.textContent = `${n} online`;
+  badge.classList.remove('hidden');
+}
+
+function esc(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function timeAgo(ts) {
+  const s = Math.floor((Date.now() - ts) / 1000);
+  if (s < 60)   return 'just now';
+  if (s < 3600) return `${Math.floor(s/60)}m ago`;
+  if (s < 86400) return `${Math.floor(s/3600)}h ago`;
+  return `${Math.floor(s/86400)}d ago`;
+}
+
+// ── Boot ──────────────────────────────────────────────────────────────────────
+connect();
+</script>
+</body>
+</html>
